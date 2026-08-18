@@ -40,7 +40,7 @@ jobs:
             aws --region us-east-1 --compliance cis_2.0_aws \
               --output-formats csv json-ocsf html --ignore-exit-code-3
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: prowler-cis
