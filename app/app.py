@@ -4,7 +4,7 @@ from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 ENVIRONMENT = os.getenv("APP_ENV", "local")
 
 
