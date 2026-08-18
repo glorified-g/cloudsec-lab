@@ -2,14 +2,39 @@
 
 Hands-on CloudSec / CNAPP lab. The Flask app is a health page. **Infrastructure and how it is changed are the point.**
 
-```
-GitHub (main)
-    → Actions + OIDC
-    → ECR (linux/arm64 images)
-    → ECS Fargate (public IP, no ALB)
+```mermaid
+flowchart LR
+  subgraph laptop ["Mac Mini"]
+    tf["Terraform\nprofile ken-lab"]
+  end
 
-Terraform (local, profile ken-lab)
-    → VPC, IAM, ECR, ECS, GitHub OIDC provider/role
+  subgraph github ["GitHub"]
+    repo["cloudsec-lab\nmain"]
+    gha["Actions\nsmoke / probe / ecr-push"]
+  end
+
+  subgraph aws ["AWS us-east-1"]
+    oidc["IAM OIDC provider\nrole cloudsec-lab-github"]
+    ecr["ECR\nlinux/arm64"]
+    subgraph vpc ["VPC 10.0.0.0/16 — public subnet"]
+      igw[IGW]
+      task["ECS Fargate ARM64\npublic IP :8080\nno ALB / no NAT"]
+    end
+    cw["CloudWatch logs"]
+  end
+
+  you[Browser]
+
+  tf -->|"apply (not from CI)"| vpc
+  tf --> oidc
+  tf --> ecr
+  repo --> gha
+  gha -->|"OIDC assume\nno access keys"| oidc
+  gha -->|"push :gha"| ecr
+  ecr --> task
+  task --> cw
+  igw --> task
+  you -->|"HTTP"| task
 ```
 
 Terraform apply stays on the laptop. Actions does **not** apply. There is no `deploy.yml` yet: CI can assume AWS and push an image; starting/stopping the service is still Terraform.
