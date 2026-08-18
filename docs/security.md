@@ -20,4 +20,18 @@ Image scan must `docker pull --platform linux/arm64` then `trivy image --platfor
 
 `app/.venv` is in `.dockerignore` so the Mac venv is not copied into the image.
 
-Ruleset **`main-protect`** is Active on the default branch: force-push and deleting `main` are blocked. Required status checks are **off** — they block `git push` to `main` (checks run after GitHub has the commit). Stay on `main` for daily work. Use a branch + PR when you want to see a gate fail (KAN-55).
+Ruleset **`main-protect`** is Active on the default branch: force-push and deleting `main` are blocked. Required status checks are **off** — they block `git push` to `main` (checks run after GitHub has the commit). Stay on `main` for daily work.
+
+## Planted findings (KAN-55)
+
+Leave these PRs **open and unmerged**. Do not `terraform apply` the infra ones.
+
+| PR | Branch | Plant | Gate that went red |
+|----|--------|-------|--------------------|
+| [#1](https://github.com/glorified-g/cloudsec-lab/pull/1) | `lab/secret` | fake `secret_key` in `app/planted.env` | `gitleaks` |
+| [#3](https://github.com/glorified-g/cloudsec-lab/pull/3) | `lab/vulnerable-container` | `pyyaml==5.3.1` | `trivy-fs` |
+| [#5](https://github.com/glorified-g/cloudsec-lab/pull/5) | `lab/insecure-sg` | SSH/22 from `0.0.0.0/0` | `validate` (Trivy IaC) |
+| [#4](https://github.com/glorified-g/cloudsec-lab/pull/4) | `lab/public-storage` | S3 public access unblocked | `validate` |
+| [#2](https://github.com/glorified-g/cloudsec-lab/pull/2) | `lab/insecure-iam` | `s3:*` on `*` | `validate` |
+
+`Action = "*"` did **not** fail. That is AVD-AWS-0057, **deprecated** in Trivy 0.74. `s3:*` is AVD-AWS-0345 and still HIGH.
