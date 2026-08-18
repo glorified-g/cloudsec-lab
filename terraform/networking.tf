@@ -58,3 +58,10 @@ resource "aws_security_group" "app" {
 
   tags = { Name = "${var.name}-app-sg" }
 }
+
+# AWS creates this with the VPC (self-ingress + 0.0.0.0/0 egress). CIS wants it empty.
+# Fargate uses aws_security_group.app, not this.
+resource "aws_default_security_group" "lab" {
+  vpc_id = aws_vpc.lab.id
+  tags   = { Name = "${var.name}-default-sg-locked" }
+}
