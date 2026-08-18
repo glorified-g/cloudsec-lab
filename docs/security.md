@@ -10,6 +10,8 @@ Same tools you ran on the Mac, in GitHub Actions.
 | Trivy image (libraries) | `deploy.yml` after push | Yes, HIGH/CRITICAL in Flask/pip packages |
 | Trivy image (OS) | `deploy.yml` after push | No — Debian in `python:3.12-slim` currently has ~26 HIGH/CRITICAL; report only |
 
+Image scan must `docker pull --platform linux/arm64` then `trivy image --platform linux/arm64`. Buildx pushes ARM64 only (Fargate); GitHub-hosted runners are amd64. Without `--platform`, Trivy looks for linux/amd64 and the job dies even though `:gha` is in ECR.
+
 `.trivyignore` skips three Terraform findings we are keeping on purpose:
 
 - **AVD-AWS-0031** — ECR tag mutability. `:gha` is overwritten by CI.

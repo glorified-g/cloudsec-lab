@@ -77,16 +77,21 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:gha
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
+      # Buildx pushed linux/arm64 only (no load). Runner is amd64, so a bare
+      # `trivy image $ECR:gha` looks for linux/amd64 and exits 1.
       - name: Trivy image
         env:
           IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:gha
         run: |
+          docker pull --platform linux/arm64 "$IMAGE"
           echo "=== OS packages (report only; python:3.12-slim noise) ==="
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.74.0 \
-            image "$IMAGE" --severity HIGH,CRITICAL --pkg-types os --exit-code 0
+            image --platform linux/arm64 "$IMAGE" \
+            --severity HIGH,CRITICAL --pkg-types os --exit-code 0
           echo "=== App libraries (fails on HIGH/CRITICAL) ==="
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.74.0 \
-            image "$IMAGE" --severity HIGH,CRITICAL --pkg-types library --exit-code 1
+            image --platform linux/arm64 "$IMAGE" \
+            --severity HIGH,CRITICAL --pkg-types library --exit-code 1
 
       - name: Force new deployment of :gha
         run: |
