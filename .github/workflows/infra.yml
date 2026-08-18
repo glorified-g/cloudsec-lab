@@ -1,4 +1,4 @@
-# KAN-53: infra pipeline. fmt + validate only. No AWS, no apply, no Trivy.
+# KAN-53: infra pipeline. fmt + validate + Trivy IaC. No AWS apply.
 # GitLab analogue: a terraform job with rules: changes: terraform/**
 name: infra
 
@@ -9,10 +9,12 @@ on:
     paths:
       - "terraform/**"
       - ".github/workflows/infra.yml"
+      - ".trivyignore"
   pull_request:
     paths:
       - "terraform/**"
       - ".github/workflows/infra.yml"
+      - ".trivyignore"
 
 permissions:
   contents: read
@@ -39,3 +41,10 @@ jobs:
 
       - name: terraform validate
         run: terraform validate
+
+      - name: Trivy IaC
+        working-directory: .
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:0.74.0 config /src/terraform \
+            --severity HIGH,CRITICAL \
+            --exit-code 1

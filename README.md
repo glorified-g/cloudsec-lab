@@ -10,7 +10,7 @@ flowchart LR
 
   subgraph github ["GitHub"]
     repo["cloudsec-lab\nmain"]
-    gha["Actions\ninfra / smoke / probe / ecr-push / deploy"]
+    gha["Actions\ninfra / security / deploy"]
   end
 
   subgraph aws ["AWS us-east-1"]
@@ -38,7 +38,7 @@ flowchart LR
   you -->|"HTTP"| task
 ```
 
-Terraform apply stays on the laptop. **infra.yml** runs `fmt` + `validate` only (no AWS). **deploy.yml** tests, pushes `:gha`, and force-deploys ECS. Start/stop (`desired_count`) is still Terraform on the Mac.
+Terraform apply stays on the laptop. **infra.yml** is `fmt` + `validate` + Trivy IaC. **deploy.yml** tests, pushes `:gha`, scans app libraries, force-deploys ECS. Start/stop (`desired_count`) is still Terraform on the Mac.
 
 ## Design
 
@@ -74,11 +74,12 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 | Workflow | Does | Does not |
 |----------|------|----------|
-| `infra` | `terraform fmt -check` + `validate` | AWS; plan; apply |
+| `infra` | `fmt` + `validate` + Trivy IaC | AWS; plan; apply |
+| `security` | Gitleaks + Trivy filesystem | Image OS gate |
 | `oidc-smoke` | Assume the GitHub role; `sts get-caller-identity` | Touch ECR/ECS |
 | `oidc-probe` | Same, then read-only ECR/ECS describe | Push or start tasks |
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
-| `deploy` | Test → same image push → `update-service --force-new-deployment` | Terraform apply; change `desired_count` |
+| `deploy` | Test → push → Trivy image (libs fail, OS report) → ECS | Terraform apply; change `desired_count` |
 
 ## Operate
 
@@ -86,7 +87,9 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 **Deploy from git push:** [docs/deploy.md](docs/deploy.md) — Actions; does not change `desired_count`.
 
-**Infra CI:** [docs/infra.md](docs/infra.md) — `fmt` + `validate` only.
+**Infra CI:** [docs/infra.md](docs/infra.md) — `fmt` + `validate` + Trivy IaC.
+
+**Scanners:** [docs/security.md](docs/security.md) — Gitleaks, Trivy fs/IaC/image.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
@@ -128,11 +131,13 @@ app/                    Flask
 tests/                  pytest (CI)
 Dockerfile
 terraform/              VPC, ECR, ECS, OIDC (apply locally)
-.github/workflows/      infra, smoke, probe, ecr-push, deploy
+.github/workflows/      infra, security, smoke, probe, ecr-push, deploy
 docs/scale.md           start/stop Fargate from the Mac
 docs/deploy.md          git push → ECS
-docs/infra.md           terraform fmt / validate in CI
+docs/infra.md           terraform fmt / validate / Trivy IaC
+docs/security.md        Gitleaks + Trivy policy
+.trivyignore            IaC findings we keep on purpose
 scripts/ecs-url.sh      print running task URL
 ```
 
-Not in this repo yet: Trivy, Gitleaks, Prowler, Cloud Custodian.
+Not in this repo yet: Prowler, Cloud Custodian, branch protection (GitHub UI).

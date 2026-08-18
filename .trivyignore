@@ -1,0 +1,4 @@
+# Lab choices Trivy would fail as HIGH/CRITICAL. Each is intentional (see docs/security.md).
+AVD-AWS-0031
+AVD-AWS-0104
+AVD-AWS-0164

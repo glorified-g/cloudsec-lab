@@ -10,6 +10,7 @@ on:
     paths:
       - "app/**"
       - "Dockerfile"
+      - ".dockerignore"
       - ".github/workflows/deploy.yml"
 
 permissions:
@@ -75,6 +76,17 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:gha
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Trivy image
+        env:
+          IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:gha
+        run: |
+          echo "=== OS packages (report only; python:3.12-slim noise) ==="
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.74.0 \
+            image "$IMAGE" --severity HIGH,CRITICAL --pkg-types os --exit-code 0
+          echo "=== App libraries (fails on HIGH/CRITICAL) ==="
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.74.0 \
+            image "$IMAGE" --severity HIGH,CRITICAL --pkg-types library --exit-code 1
 
       - name: Force new deployment of :gha
         run: |

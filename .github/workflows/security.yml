@@ -1,0 +1,48 @@
+# KAN-54: Gitleaks + Trivy filesystem. Image scan lives on deploy.yml; IaC on infra.yml.
+name: security
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/security.yml"
+      - ".trivyignore"
+  pull_request:
+    paths:
+      - "app/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/security.yml"
+      - ".trivyignore"
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        run: |
+          docker run --rm -v "$PWD:/path" ghcr.io/gitleaks/gitleaks:v8.28.0 \
+            detect --source /path -v
+
+  trivy-fs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Trivy filesystem
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:0.74.0 fs /src \
+            --severity HIGH,CRITICAL \
+            --skip-dirs app/.venv \
+            --exit-code 1
