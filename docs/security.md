@@ -20,4 +20,4 @@ Image scan must `docker pull --platform linux/arm64` then `trivy image --platfor
 
 `app/.venv` is in `.dockerignore` so the Mac venv is not copied into the image.
 
-Branch protection (require these checks on PRs) is a GitHub UI step after the workflows are green. Direct pushes to `main` still run the jobs; they are not blocked unless you turn on “require pull request.”
+Ruleset **`main-protect`** is Active on the default branch. Required checks on PRs: `gitleaks`, `trivy-fs`, `validate`. Direct pushes to `main` still allowed (no “require pull request”). Force-push and deleting `main` are blocked. Do not require the `deploy` check — it only runs on `main`.
