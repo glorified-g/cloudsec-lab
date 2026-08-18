@@ -20,4 +20,4 @@ Image scan must `docker pull --platform linux/arm64` then `trivy image --platfor
 
 `app/.venv` is in `.dockerignore` so the Mac venv is not copied into the image.
 
-Ruleset **`main-protect`** is Active on the default branch. Required checks on PRs: `gitleaks`, `trivy-fs`, `validate`. Direct pushes to `main` still allowed (no “require pull request”). Force-push and deleting `main` are blocked. Do not require the `deploy` check — it only runs on `main`.
+Ruleset **`main-protect`** is Active on the default branch: force-push and deleting `main` are blocked. Required status checks are **off** — they block `git push` to `main` (checks run after GitHub has the commit). Stay on `main` for daily work. Use a branch + PR when you want to see a gate fail (KAN-55).
