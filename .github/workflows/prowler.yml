@@ -1,0 +1,46 @@
+# KAN-56: Prowler CIS against live AWS. Report only — a lab account will fail many checks.
+# Manual (workflow_dispatch). Does not run on git push. Does not terraform apply.
+name: prowler
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  cis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS credentials (OIDC prowler role)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::951694610756:role/cloudsec-lab-github-prowler
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Prowler CIS 2.0 (us-east-1)
+        run: |
+          mkdir -p prowler-output
+          docker run --rm \
+            -e AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY \
+            -e AWS_SESSION_TOKEN \
+            -e AWS_DEFAULT_REGION \
+            -v "$PWD/prowler-output:/home/prowler/output" \
+            prowlercloud/prowler:5.39.0 \
+            aws --region us-east-1 --compliance cis_2.0_aws \
+              --output-formats csv json-ocsf html --ignore-exit-code-3
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prowler-cis
+          path: prowler-output

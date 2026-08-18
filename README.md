@@ -80,6 +80,7 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 | `oidc-probe` | Same, then read-only ECR/ECS describe | Push or start tasks |
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
 | `deploy` | Test → push → Trivy image (libs fail, OS report) → ECS | Terraform apply; change `desired_count` |
+| `prowler` | OIDC read-only role; CIS 2.0 in us-east-1; artifact | Fail the job on findings; apply; deploy |
 
 ## Operate
 
@@ -90,6 +91,8 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 **Infra CI:** [docs/infra.md](docs/infra.md) — `fmt` + `validate` + Trivy IaC.
 
 **Scanners:** [docs/security.md](docs/security.md) — Gitleaks, Trivy fs/IaC/image.
+
+**Prowler (live AWS):** [docs/prowler.md](docs/prowler.md) — CIS on the Mac, then Actions `workflow_dispatch`.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
