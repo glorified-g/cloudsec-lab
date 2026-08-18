@@ -10,7 +10,7 @@ flowchart LR
 
   subgraph github ["GitHub"]
     repo["cloudsec-lab\nmain"]
-    gha["Actions\nsmoke / probe / ecr-push"]
+    gha["Actions\nsmoke / probe / ecr-push / deploy"]
   end
 
   subgraph aws ["AWS us-east-1"]
@@ -31,13 +31,14 @@ flowchart LR
   repo --> gha
   gha -->|"OIDC assume\nno access keys"| oidc
   gha -->|"push :gha"| ecr
+  gha -->|"force-new-deployment"| task
   ecr --> task
   task --> cw
   igw --> task
   you -->|"HTTP"| task
 ```
 
-Terraform apply stays on the laptop. Actions does **not** apply. There is no `deploy.yml` yet: CI can assume AWS and push an image; starting/stopping the service is still Terraform.
+Terraform apply stays on the laptop. Actions does **not** apply. **deploy.yml** tests, pushes `:gha`, and force-deploys ECS. Start/stop (`desired_count`) is still Terraform on the Mac.
 
 ## Design
 
@@ -76,10 +77,13 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 | `oidc-smoke` | Assume the GitHub role; `sts get-caller-identity` | Touch ECR/ECS |
 | `oidc-probe` | Same, then read-only ECR/ECS describe | Push or start tasks |
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
+| `deploy` | Test → same image push → `update-service --force-new-deployment` | Terraform apply; change `desired_count` |
 
 ## Operate
 
 **Scale up/down (Mac CLI):** [docs/scale.md](docs/scale.md) — Terraform on `ken-lab`, not Actions.
+
+**Deploy from git push:** [docs/deploy.md](docs/deploy.md) — Actions; does not change `desired_count`.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
@@ -118,11 +122,13 @@ docker run --rm -p 8080:8080 cloudsec-lab
 
 ```
 app/                    Flask
+tests/                  pytest (CI)
 Dockerfile
 terraform/              VPC, ECR, ECS, OIDC (apply locally)
-.github/workflows/      smoke, probe, ecr-push
+.github/workflows/      smoke, probe, ecr-push, deploy
 docs/scale.md           start/stop Fargate from the Mac
+docs/deploy.md          git push → ECS
 scripts/ecs-url.sh      print running task URL
 ```
 
-Not in this repo yet: Trivy, Gitleaks, Prowler, Cloud Custodian, `deploy.yml`.
+Not in this repo yet: Trivy, Gitleaks, Prowler, Cloud Custodian.
