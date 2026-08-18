@@ -81,6 +81,7 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
 | `deploy` | Test → push → Trivy image (libs fail, OS report) → ECS | Terraform apply; change `desired_count` |
 | `prowler` | OIDC read-only role; CIS 2.0 in us-east-1; artifact | Fail the job on findings; apply; deploy |
+| `ci-image` | Build linux/amd64 CLIs → GHCR `cloudsec-lab-ci` | Fargate app image; Docker Hub tool images |
 
 ## Operate
 
@@ -93,6 +94,8 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 **Scanners:** [docs/security.md](docs/security.md) — Gitleaks, Trivy fs/IaC/image.
 
 **Prowler (live AWS):** [docs/prowler.md](docs/prowler.md) — CIS on the Mac, then Actions `workflow_dispatch`.
+
+**Golden CI image:** [docs/ci-image.md](docs/ci-image.md) — GHCR `cloudsec-lab-ci`; infra/security/prowler switch after the first publish.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
@@ -132,15 +135,17 @@ docker run --rm -p 8080:8080 cloudsec-lab
 ```
 app/                    Flask
 tests/                  pytest (CI)
-Dockerfile
+Dockerfile              Fargate app (linux/arm64)
+ci/                     Golden CI image (linux/amd64) → GHCR
 terraform/              VPC, ECR, ECS, OIDC (apply locally)
-.github/workflows/      infra, security, smoke, probe, ecr-push, deploy
+.github/workflows/      infra, security, smoke, probe, ecr-push, deploy, prowler, ci-image
 docs/scale.md           start/stop Fargate from the Mac
 docs/deploy.md          git push → ECS
 docs/infra.md           terraform fmt / validate / Trivy IaC
 docs/security.md        Gitleaks + Trivy policy
+docs/prowler.md         CIS on the Mac, then Actions
+docs/ci-image.md        GHCR CI image
 .trivyignore            IaC findings we keep on purpose
 scripts/ecs-url.sh      print running task URL
+scripts/prowler.sh      local CIS (Docker)
 ```
-
-Not in this repo yet: Prowler, Cloud Custodian, branch protection (GitHub UI).
