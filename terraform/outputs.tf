@@ -29,6 +29,11 @@ output "github_actions_role_arn" {
   value       = aws_iam_role.github.arn
 }
 
+output "github_prowler_role_arn" {
+  description = "Read-only OIDC role for the prowler workflow. Not a secret."
+  value       = aws_iam_role.github_prowler.arn
+}
+
 output "stop_billing" {
   value = "cd terraform && terraform apply -auto-approve -var='desired_count=0'   # or terraform destroy"
 }
