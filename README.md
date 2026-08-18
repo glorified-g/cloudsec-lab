@@ -10,7 +10,7 @@ flowchart LR
 
   subgraph github ["GitHub"]
     repo["cloudsec-lab\nmain"]
-    gha["Actions\nsmoke / probe / ecr-push / deploy"]
+    gha["Actions\ninfra / smoke / probe / ecr-push / deploy"]
   end
 
   subgraph aws ["AWS us-east-1"]
@@ -38,7 +38,7 @@ flowchart LR
   you -->|"HTTP"| task
 ```
 
-Terraform apply stays on the laptop. Actions does **not** apply. **deploy.yml** tests, pushes `:gha`, and force-deploys ECS. Start/stop (`desired_count`) is still Terraform on the Mac.
+Terraform apply stays on the laptop. **infra.yml** runs `fmt` + `validate` only (no AWS). **deploy.yml** tests, pushes `:gha`, and force-deploys ECS. Start/stop (`desired_count`) is still Terraform on the Mac.
 
 ## Design
 
@@ -74,6 +74,7 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 | Workflow | Does | Does not |
 |----------|------|----------|
+| `infra` | `terraform fmt -check` + `validate` | AWS; plan; apply |
 | `oidc-smoke` | Assume the GitHub role; `sts get-caller-identity` | Touch ECR/ECS |
 | `oidc-probe` | Same, then read-only ECR/ECS describe | Push or start tasks |
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
@@ -84,6 +85,8 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 **Scale up/down (Mac CLI):** [docs/scale.md](docs/scale.md) — Terraform on `ken-lab`, not Actions.
 
 **Deploy from git push:** [docs/deploy.md](docs/deploy.md) — Actions; does not change `desired_count`.
+
+**Infra CI:** [docs/infra.md](docs/infra.md) — `fmt` + `validate` only.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
@@ -125,9 +128,10 @@ app/                    Flask
 tests/                  pytest (CI)
 Dockerfile
 terraform/              VPC, ECR, ECS, OIDC (apply locally)
-.github/workflows/      smoke, probe, ecr-push, deploy
+.github/workflows/      infra, smoke, probe, ecr-push, deploy
 docs/scale.md           start/stop Fargate from the Mac
 docs/deploy.md          git push → ECS
+docs/infra.md           terraform fmt / validate in CI
 scripts/ecs-url.sh      print running task URL
 ```
 
