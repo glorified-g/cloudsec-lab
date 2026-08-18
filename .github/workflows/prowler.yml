@@ -29,7 +29,8 @@ jobs:
       - name: Prowler CIS 2.0 (us-east-1)
         run: |
           mkdir -p prowler-output
-          docker run --rm \
+          chmod 777 prowler-output
+          docker run --rm --user 0:0 \
             -e AWS_ACCESS_KEY_ID \
             -e AWS_SECRET_ACCESS_KEY \
             -e AWS_SESSION_TOKEN \

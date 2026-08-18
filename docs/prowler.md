@@ -36,4 +36,6 @@ Plan should add the prowler role only.
 
 2. Push the workflow, then **Actions → prowler → Run workflow**.
 
+The container user is `prowler`; Actions creates `prowler-output` as the runner. The workflow runs the container as root so it can write the report (`--user 0:0`).
+
 Does not run on `git push`. Does not change `desired_count`.
