@@ -1,0 +1,59 @@
+# KAN-62 rung 2: same OIDC assume as oidc-smoke, then read-only AWS APIs.
+# GitLab analogue: a manual job (when: manual) that uses an id_token, not a deploy stage.
+# Does not push images or start Fargate.
+name: oidc-probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oidc-probe.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: cloudsec-lab
+  ECS_CLUSTER: cloudsec-lab
+  ECS_SERVICE: cloudsec-lab
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::951694610756:role/cloudsec-lab-github
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Who am I, and which CPU is this runner?
+        run: |
+          echo "=== runner (GitHub-hosted = amd64) ==="
+          uname -m
+          echo "=== AWS identity (should be cloudsec-lab-github, not ken-lab-cli) ==="
+          aws sts get-caller-identity
+
+      - name: ECR images (what we pushed by hand)
+        run: |
+          aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --query 'sort_by(imageDetails,& imagePushedAt)[-5:].[imageTags, imagePushedAt, imageDigest, imageSizeInBytes]' \
+            --output table
+
+      - name: ECS service + task CPU arch (Fargate is ARM64)
+        run: |
+          aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}' \
+            --output table
+          aws ecs describe-task-definition \
+            --task-definition "$ECS_SERVICE" \
+            --query 'taskDefinition.runtimePlatform' \
+            --output table
+          echo "desired should still be 0. Runner uname vs runtimePlatform is the KAN-62 gotcha."

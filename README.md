@@ -78,4 +78,6 @@ IAM role `cloudsec-lab-github` trusts **this repo, `main` only**. GitHub Actions
 
 Prove it: Actions workflow **oidc-smoke** → `aws sts get-caller-identity` should show the GitHub role, not `ken-lab-cli`.
 
+**oidc-probe** (manual / path-filtered): same assume, then read-only `ecr describe-images` + `ecs describe-services`. Does not push or start Fargate. Use this before `deploy.yml`. Watch **runner `uname -m`** (amd64) vs Fargate **ARM64**.
+
 
