@@ -1,5 +1,6 @@
 # KAN-56: Prowler CIS against live AWS. Report only — a lab account will fail many checks.
 # Manual (workflow_dispatch). Does not run on git push. Does not terraform apply.
+# Prowler CLI from ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0 (KAN-63).
 name: prowler
 
 on:
@@ -8,6 +9,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  packages: read
 
 env:
   AWS_REGION: us-east-1
@@ -16,6 +18,11 @@ jobs:
   cis:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    container:
+      image: ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v5
 
@@ -29,16 +36,9 @@ jobs:
       - name: Prowler CIS 2.0 (us-east-1)
         run: |
           mkdir -p prowler-output
-          chmod 777 prowler-output
-          docker run --rm --user 0:0 \
-            -e AWS_ACCESS_KEY_ID \
-            -e AWS_SECRET_ACCESS_KEY \
-            -e AWS_SESSION_TOKEN \
-            -e AWS_DEFAULT_REGION \
-            -v "$PWD/prowler-output:/home/prowler/output" \
-            prowlercloud/prowler:5.39.0 \
-            aws --region us-east-1 --compliance cis_2.0_aws \
-              --output-formats csv json-ocsf html --ignore-exit-code-3
+          prowler aws --region us-east-1 --compliance cis_2.0_aws \
+            --output-formats csv json-ocsf html --ignore-exit-code-3 \
+            --output-directory prowler-output
 
       - uses: actions/upload-artifact@v6
         if: always()

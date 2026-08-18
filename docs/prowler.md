@@ -2,7 +2,7 @@
 
 Trivy scans **git** (Terraform / image / deps). Prowler scans **live AWS** via APIs. Different question: “what is actually in the account?”
 
-Pinned image: `prowlercloud/prowler:5.39.0`. First slice: **CIS AWS 2.0**, region **us-east-1**. Report only — this lab will fail many CIS checks (no CloudTrail, public SG :8080, no password policy, …). That is the point.
+Actions uses Prowler **5.39.1** from `ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0` ([ci-image.md](ci-image.md)). Local Mac script still pulls `prowlercloud/prowler:5.39.0`. First slice: **CIS AWS 2.0**, region **us-east-1**. Report only — this lab will fail many CIS checks (no CloudTrail, public SG :8080, no password policy, …). That is the point.
 
 Reports stay out of git (`prowler-output/`). Actions uploads them as an artifact.
 
@@ -34,8 +34,6 @@ terraform apply -var='image_tag=gha'
 
 Plan should add the prowler role only.
 
-2. Push the workflow, then **Actions → prowler → Run workflow**.
-
-The container user is `prowler`; Actions creates `prowler-output` as the runner. The workflow runs the container as root so it can write the report (`--user 0:0`).
+2. **Actions → prowler → Run workflow**. Artifact `prowler-cis`.
 
 Does not run on `git push`. Does not change `desired_count`.

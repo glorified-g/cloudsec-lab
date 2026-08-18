@@ -1,6 +1,6 @@
 # Security scans (Trivy + Gitleaks)
 
-Same tools you ran on the Mac, in GitHub Actions.
+Same tools you ran on the Mac, in GitHub Actions. `gitleaks` and `trivy-fs` run in `ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0` ([ci-image.md](ci-image.md)). Deploy’s image scan still uses Docker.
 
 | Scan | Where | Fails the job? |
 |------|--------|----------------|

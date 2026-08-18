@@ -74,13 +74,13 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 | Workflow | Does | Does not |
 |----------|------|----------|
-| `infra` | `fmt` + `validate` + Trivy IaC | AWS; plan; apply |
-| `security` | Gitleaks + Trivy filesystem | Image OS gate |
+| `infra` | `fmt` + `validate` + Trivy IaC (GHCR CI image) | AWS; plan; apply |
+| `security` | Gitleaks + Trivy filesystem (GHCR CI image) | Image OS gate |
 | `oidc-smoke` | Assume the GitHub role; `sts get-caller-identity` | Touch ECR/ECS |
 | `oidc-probe` | Same, then read-only ECR/ECS describe | Push or start tasks |
 | `ecr-push` | OIDC → login → build `linux/arm64` → push `:gha` and `:sha` | Retag `latest`; change `desired_count` |
 | `deploy` | Test → push → Trivy image (libs fail, OS report) → ECS | Terraform apply; change `desired_count` |
-| `prowler` | OIDC read-only role; CIS 2.0 in us-east-1; artifact | Fail the job on findings; apply; deploy |
+| `prowler` | OIDC; CIS 2.0; artifact; GHCR CI image | Fail the job on findings; apply; deploy |
 | `ci-image` | Build linux/amd64 CLIs → GHCR `cloudsec-lab-ci` | Fargate app image; Docker Hub tool images |
 
 ## Operate
@@ -95,7 +95,7 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 **Prowler (live AWS):** [docs/prowler.md](docs/prowler.md) — CIS on the Mac, then Actions `workflow_dispatch`.
 
-**Golden CI image:** [docs/ci-image.md](docs/ci-image.md) — GHCR `cloudsec-lab-ci`; infra/security/prowler switch after the first publish.
+**Golden CI image:** [docs/ci-image.md](docs/ci-image.md) — GHCR `cloudsec-lab-ci`; infra/security/prowler pull it.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"

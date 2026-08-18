@@ -1,5 +1,5 @@
 # KAN-53: infra pipeline. fmt + validate + Trivy IaC. No AWS apply.
-# GitLab analogue: a terraform job with rules: changes: terraform/**
+# CLIs come from ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0 (KAN-63). No docker-in-docker.
 name: infra
 
 on:
@@ -18,20 +18,21 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/glorified-g/cloudsec-lab-ci:1.0.0
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     defaults:
       run:
         working-directory: terraform
     steps:
       - uses: actions/checkout@v5
-
-      - uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: "1.9.8"
-          terraform_wrapper: false
 
       - name: terraform fmt
         run: terraform fmt -check -recursive
@@ -43,8 +44,8 @@ jobs:
         run: terraform validate
 
       - name: Trivy IaC
-        working-directory: .
+        working-directory: ${{ github.workspace }}
         run: |
-          docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:0.74.0 config /src/terraform \
+          trivy config terraform \
             --severity HIGH,CRITICAL \
             --exit-code 1
