@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/oidc-smoke.yml"
+      - "terraform/oidc.tf"
+      - "terraform/variables.tf"
 
 permissions:
   id-token: write

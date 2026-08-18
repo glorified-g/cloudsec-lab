@@ -44,6 +44,18 @@ variable "github_repo" {
   default     = "cloudsec-lab"
 }
 
+variable "github_owner_id" {
+  description = "GitHub numeric user/org id (appears in the OIDC sub claim)."
+  type        = string
+  default     = "91491924"
+}
+
+variable "github_repo_id" {
+  description = "GitHub numeric repo id (appears in the OIDC sub claim)."
+  type        = string
+  default     = "1337902461"
+}
+
 variable "tags" {
   type = map(string)
   default = {

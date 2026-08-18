@@ -21,10 +21,13 @@ data "aws_iam_policy_document" "github_assume" {
       values   = ["sts.amazonaws.com"]
     }
 
+    # GitHub now emits owner/repo numeric IDs in `sub`
+    # (repo:glorified-g@91491924/cloudsec-lab@1337902461:ref:refs/heads/main).
+    # Exact match pins this repo; a rename/fork will not match.
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main"]
+      values   = ["repo:${var.github_org}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}:ref:refs/heads/main"]
     }
   }
 }
