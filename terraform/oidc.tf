@@ -4,8 +4,11 @@
 
 data "aws_iam_policy_document" "github_assume" {
   statement {
-    sid     = "GitHubActionsOidc"
-    actions = ["sts:AssumeRoleWithWebIdentity"]
+    sid = "GitHubActionsOidc"
+    actions = [
+      "sts:AssumeRoleWithWebIdentity",
+      "sts:TagSession",
+    ]
 
     principals {
       type        = "Federated"
@@ -27,9 +30,13 @@ data "aws_iam_policy_document" "github_assume" {
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+  # Leaf certs rotate; include the historical GitHub/DigiCert print plus current ISRG Root YR.
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",
+    "ab9d0263244dd0326eb67015705a667e79cfe998",
+  ]
 }
 
 resource "aws_iam_role" "github" {
