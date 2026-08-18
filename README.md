@@ -80,4 +80,6 @@ Prove it: Actions workflow **oidc-smoke** → `aws sts get-caller-identity` shou
 
 **oidc-probe** (manual / path-filtered): same assume, then read-only `ecr describe-images` + `ecs describe-services`. Does not push or start Fargate. Use this before `deploy.yml`. Watch **runner `uname -m`** (amd64) vs Fargate **ARM64**.
 
+**ecr-push** (manual / path-filtered): OIDC → QEMU/buildx `linux/arm64` → ECR tags `gha` and the commit SHA. Does **not** retag `latest` and does **not** start Fargate. First run is slow (emulated ARM on an amd64 runner).
+
 
