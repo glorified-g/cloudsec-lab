@@ -42,7 +42,7 @@ jobs:
         run: |
           aws ecr describe-images \
             --repository-name "$ECR_REPOSITORY" \
-            --query 'sort_by(imageDetails,& imagePushedAt)[-5:].[imageTags, imagePushedAt, imageDigest, imageSizeInBytes]' \
+            --query 'sort_by(imageDetails,& imagePushedAt)[-5:].{tag:imageTags[0],pushed:imagePushedAt,digest:imageDigest,bytes:imageSizeInBytes}' \
             --output table
 
       - name: ECS service + task CPU arch (Fargate is ARM64)
