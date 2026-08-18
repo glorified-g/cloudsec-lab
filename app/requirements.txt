@@ -1,1 +1,3 @@
 flask==3.1.1
+# KAN-55 planted: PyYAML 5.3.1 is CRITICAL (CVE-2020-14343). Do not merge.
+pyyaml==5.3.1
