@@ -79,6 +79,8 @@ CLI: Terraform `$HOME/.local/bin`, AWS `$HOME/Library/Python/3.9/bin`, profile *
 
 ## Operate
 
+**Scale up/down (Mac CLI):** [docs/scale.md](docs/scale.md) — Terraform on `ken-lab`, not Actions.
+
 ```bash
 export PATH="$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH"
 export AWS_PROFILE=ken-lab
@@ -86,15 +88,6 @@ cd terraform
 ```
 
 First create (or after clone): `terraform init && terraform plan && terraform apply` (default desired 0).
-
-```bash
-# start — use the image tag currently on the task def
-terraform apply -var='desired_count=1' -var='image_tag=gha'
-../scripts/ecs-url.sh          # public IP; new each start
-
-# stop — same image_tag so Terraform does not swap :gha back to :latest
-terraform apply -auto-approve -var='desired_count=0' -var='image_tag=gha'
-```
 
 Teardown everything: `terraform destroy`.
 
@@ -128,6 +121,7 @@ app/                    Flask
 Dockerfile
 terraform/              VPC, ECR, ECS, OIDC (apply locally)
 .github/workflows/      smoke, probe, ecr-push
+docs/scale.md           start/stop Fargate from the Mac
 scripts/ecs-url.sh      print running task URL
 ```
 
