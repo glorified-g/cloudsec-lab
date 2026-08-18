@@ -72,4 +72,10 @@ cd terraform && terraform apply -auto-approve -var='desired_count=0'
 
 Full teardown: `terraform destroy`
 
+## GitHub OIDC (Phase 4)
+
+IAM role `cloudsec-lab-github` trusts **this repo, `main` only**. GitHub Actions assumes it with a short-lived token. **Do not** put `AWS_ACCESS_KEY_ID` in Secrets.
+
+Prove it: Actions workflow **oidc-smoke** → `aws sts get-caller-identity` should show the GitHub role, not `ken-lab-cli`.
+
 

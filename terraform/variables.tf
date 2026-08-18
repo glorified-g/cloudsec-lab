@@ -32,6 +32,18 @@ variable "image_tag" {
   default = "latest"
 }
 
+variable "github_org" {
+  description = "GitHub org/user that owns the public lab repo."
+  type        = string
+  default     = "glorified-g"
+}
+
+variable "github_repo" {
+  description = "Repo allowed to assume the OIDC deploy role (main branch only)."
+  type        = string
+  default     = "cloudsec-lab"
+}
+
 variable "tags" {
   type = map(string)
   default = {

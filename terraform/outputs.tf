@@ -24,6 +24,11 @@ output "task_ip_command" {
   EOT
 }
 
+output "github_actions_role_arn" {
+  description = "Set as GitHub Actions variable AWS_ROLE_ARN, or paste into the OIDC workflow. Not a secret."
+  value       = aws_iam_role.github.arn
+}
+
 output "stop_billing" {
   value = "cd terraform && terraform apply -auto-approve -var='desired_count=0'   # or terraform destroy"
 }

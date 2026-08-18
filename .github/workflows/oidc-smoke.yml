@@ -1,0 +1,26 @@
+# KAN-51: prove GitHub OIDC can assume the lab role. No AWS keys in Secrets.
+name: oidc-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oidc-smoke.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  assume-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::951694610756:role/cloudsec-lab-github
+          aws-region: us-east-1
+
+      - name: Prove identity
+        run: aws sts get-caller-identity

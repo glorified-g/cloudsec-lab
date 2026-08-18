@@ -23,4 +23,4 @@ resource "aws_iam_role" "task" {
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
 }
 
-# GitHub Actions deploy role is created in KAN-51 (OIDC). Do not put access keys in GitHub Secrets.
+# GitHub Actions deploy role: oidc.tf (no access keys in GitHub Secrets).
